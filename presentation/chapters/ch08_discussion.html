@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>第八章 讨论 | 可微分辐射参数化讲义</title>
+<link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]],processEscapes:true},svg:{fontCache:"global"}};</script>
+<script src="../mathjax/tex-svg.js" id="MathJax-script" async></script>
+</head><body>
+<div class="slide">
+<h1>第八章 讨论（Discussion）逐段精读</h1>
+
+<h2>8.1 物理梯度 vs 学习代理</h2>
+<div class="original">
+A central distinction between the present approach and neural-network emulators is the nature of the gradients they provide. An emulator approximates the input–output mapping; its gradients are derivatives of the learned surrogate, which may differ substantially from the true physical sensitivities, particularly for variables or atmospheric states underrepresented in the training data. In contrast, the automatic gradients obtained from the reformulated scheme are the exact derivatives of the governing radiative transfer equations.
+</div>
+<div class="translation">
+本方法与神经网络模拟器之间的核心区别在于它们提供的梯度的性质。模拟器近似输入-输出映射；其梯度是学习代理的导数，可能与真实物理敏感度大不相同——特别是在训练数据中代表性不足的变量或大气状态下。相比之下，重构方案的自动梯度是辐射传输支配方程的精确导数。
+</div>
+
+<div class="purpose">
+本段讨论论文方法的<strong>科学定位</strong>——与NN模拟器路线的对比。核心论点：NN的梯度是"学出来的近似"（在训练数据外可能严重失真），而本文的梯度是"精确推导出来的"（因为是同一组物理方程的精确导数）。这对于云-辐射反馈分析至关重要——反馈核的精度直接影响气候敏感度估计。</div>
+
+<h2>8.2 可微分大气物理的展望</h2>
+<div class="original">
+The reformulated radiation parameterization is the first production-grade component of an atmospheric model that is simultaneously differentiable and bit-exact with its Fortran origin. A natural extension is to apply the same reformulation strategy to the remaining parameterizations—turbulent mixing, moist convection, cloud microphysics, and gravity-wave drag—so that the entire physics package becomes differentiable.
+</div>
+<div class="translation">
+重构的辐射参数化是大气模式中首个同时具备可微分性和与Fortran原始代码逐位精确一致的业务级组件。自然的扩展是将同样的重构策略应用于其余参数化——湍流混合、湿对流、云微物理和重力波拖曳——使整个物理包变为可微分。
+</div>
+
+<div class="purpose">
+本段描绘<strong>远景蓝图</strong>：辐射只是物理包的一个组件。如果湍流、对流、云微物理、重力波都变成可微分的，就能实现端到端的梯度标定——这是传统伴随模式几十年未实现的目标。
+</div>
+
+<h2>8.3 校准实验的含义</h2>
+<div class="original">
+The controlled-recovery experiments demonstrate three points. First, when the target parameters are identifiable, the gradient-based optimization recovers them to machine precision. Second, when the parameters are not identifiable, the method converges to a low loss without recovering the truth, thereby diagnosing the ill-posedness rather than masking it. Third, the dimension-scaling analysis shows that the gradient method becomes the only tractable option for parameter dimensions exceeding approximately four.
+</div>
+<div class="translation">
+受控恢复实验证明了三点。第一，当目标参数可辨识时，梯度优化将它们恢复到机器精度。第二，当参数不可辨识时，方法收敛到低损失但无法恢复真值——从而诊断了问题的不适定性而非掩盖它。第三，维度缩放分析表明梯度方法在参数维度超过约四时成为唯一可行选项。
+</div>
+
+<div class="chapter-nav">
+<a href="ch07_calibration.html">← 第七章：校准</a>
+<a href="ch09_conclusions.html">第九章：总结 →</a>
+</div>
+</div>
+</body></html>

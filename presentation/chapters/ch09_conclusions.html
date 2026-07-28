@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>第九章 总结与展望 | 可微分辐射参数化讲义</title>
+<link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]],processEscapes:true},svg:{fontCache:"global"}};</script>
+<script src="../mathjax/tex-svg.js" id="MathJax-script" async></script>
+</head><body>
+<div class="slide">
+<h1>第九章 总结与展望（Conclusions）逐段精读</h1>
+
+<h2>9.1 主要贡献回顾</h2>
+<div class="original">
+We have reformulated the ECMWF OpenIFS broadband radiation parameterization—both the six-band shortwave scheme and the RRTM-G longwave scheme—as a differentiable computation. Verification against a reference library compiled from the unmodified Fortran source confirms bit-exact agreement: the maximum absolute difference across all twelve shortwave calculation stages is below 10⁻¹⁴, with several stages bitwise identical, under both synthetic and ERA5-driven atmospheric conditions.
+</div>
+<div class="translation">
+我们将ECMWF OpenIFS宽带辐射参数化——包括六波段短波方案和RRTM-G长波方案——重构为可微分计算。对照从未修改Fortran源代码编译的参考库验证确认了逐位精确一致：在合成和ERA5驱动的大气条件下，全部十二个短波计算阶段的最大绝对差异低于10⁻¹⁴，其中若干部段逐位相同。
+</div>
+<div class="purpose">
+结论第一段重申<strong>方法贡献</strong>：完整重构（SW+LW）+ 逐位验证（合成+ERA5）。这是论文的技术基础——没有bit-exact验证，后续的梯度分析和参数校准就失去了可信度。</div>
+
+<h2>9.2 两大应用类别</h2>
+<div class="original">
+The resulting automatic gradients enable two classes of application that the original Fortran code cannot support without a hand-coded adjoint. First, gradient-based sensitivity analysis: a single backward pass yields the per-column radiative sensitivities at a cost comparable to one forward evaluation, and the global sensitivity fields computed on the ERA5 grid are physically plausible and directionally consistent with the established radiative-feedback framework. Second, gradient-based parameter calibration: controlled-recovery experiments demonstrate that identifiable parameters—surface albedo and cloud fraction—are recovered to machine precision, that a six-band cloud-optics scaling exposes a physical identifiability limit of the broadband observation, and that the gradient method becomes the only tractable option when the parameter dimension exceeds approximately four.
+</div>
+<div class="translation">
+所产生的自动梯度支持原始Fortran代码在手写伴随缺失时无法实现的两大类应用。第一，基于梯度的敏感性分析：单次反向传播给出完整辐射雅可比，全球敏感性场物理上合理且与已建立的辐射反馈框架方向一致。第二，基于梯度的参数校准：受控恢复实验证明可辨识参数恢复到机器精度。
+</div>
+
+<div class="result">
+<strong>三大贡献总结：</strong>
+<ol>
+<li><strong>首个业务级可微分+逐位精确的辐射参数化</strong>——同时实现物理保真、可微分、GPU可移植</li>
+<li><strong>全球敏感性场</strong>——首次从业务级参数化计算精确的全球辐射梯度，揭示水汽间接反馈</li>
+<li><strong>梯度参数校准</strong>——证明Fortran无法解决的逆问题可被解决，定位了参数维度~4的实用性边界</li>
+</ol>
+</div>
+
+<h2>9.3 未来方向</h2>
+<div class="original">
+The natural next steps are a rigorous, vertically resolved quantitative comparison against published radiative-feedback kernels, and calibration against real (rather than synthetic) observations—for example, cloud optical properties against CERES or surface flux measurements.
+</div>
+<div class="translation">
+自然的下一步是对已发表的辐射反馈核进行严格的逐层定量比较，以及针对真实（而非合成）观测的校准——例如将云光学属性对CERES或地面通量测量进行校准。
+</div>
+
+<div class="purpose">
+两个明确的未来方向：<strong>(1)</strong> 与Soden (2008)等已发表的反馈核做逐层定量比较——本文只做了定性一致性检查；<strong>(2)</strong> 用真实观测校准——本文用的是合成观测（受控恢复实验），真实观测会有模型误差和噪声。
+</div>
+
+<h2>9.4 核心启示</h2>
+<div class="phys" style="font-size:1.1em">
+<p>这篇论文证明了一个深刻的事实：<strong>物理方程本身没有变</strong>——每一个叠加层递推、每一个Pade系数、每一个Delta-Eddington修正都与Fortran原始代码完全相同。改变的只是"执行物理方程的载体"：从Fortran的编译循环变成了PyTorch的张量操作图。</p>
+<p>但这个载体改变带来了三种全新的能力——自动微分、GPU加速、梯度优化——而这三种能力恰好是辐射反馈分析和物理参数标定最需要的。</p>
+<p><strong>物理是永恒的，计算工具在进化。用新工具重新表达老物理，可以释放全新的科学价值。</strong></p>
+</div>
+
+<div class="chapter-nav">
+<a href="ch08_discussion.html">← 第八章：讨论</a>
+<a href="../index.html">返回目录</a>
+</div>
+</div>
+</body></html>

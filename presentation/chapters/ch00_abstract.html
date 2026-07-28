@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>摘要 | 可微分辐射参数化讲义</title>
+<link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]],processEscapes:true},svg:{fontCache:"global"}};</script>
+<script src="../mathjax/tex-svg.js" id="MathJax-script" async></script>
+</head><body>
+
+<div class="slide">
+<h1>摘要（Abstract）逐段精读</h1>
+
+<h2>第一段：方法与验证</h2>
+
+<div class="original">
+We reformulate the ECMWF OpenIFS 48r1 broadband radiation parameterization—the six-band shortwave scheme and the RRTM-G longwave scheme—as a differentiable computation in which every radiative transfer operation is expressed as a tensor operation admitting automatic differentiation. The reformulation preserves the governing equations of the original scheme and, by retaining the exact arithmetic in double precision, achieves bit-exact agreement with the Fortran reference: the maximum absolute difference across all twelve shortwave calculation stages is below 10⁻¹⁴, with several stages bitwise identical. Driven by ERA5 reanalysis on the 137-level model grid, the scheme reproduces physically consistent flux profiles and heating rates across polar, mid-latitude, and tropical columns.
+</div>
+
+<div class="translation">
+我们将ECMWF OpenIFS 48r1宽带辐射参数化——六波段短波方案和RRTM-G长波方案——重构为一种可微分计算，其中每一个辐射传输操作都被表示为一种张量操作，从而允许自动微分。该重构保留了原方案的支配方程，并通过在双精度下保持精确的算术运算，实现了与Fortran参考的逐位精确一致：在合成输入上，所有十二个短波计算阶段的最大绝对差异低于10⁻¹⁴，其中若干部段达到逐位相同。在137层模式网格上由ERA5再分析数据驱动时，该方案在极地、中纬度和热带大气柱中再现了物理上合理的通量廓线和加热率。
+</div>
+
+<div class="purpose">
+本段直接给出<strong>方法+验证</strong>，不再赘述背景问题（背景留给Introduction展开）。三个关键信息：(1) 完整重构SW+LW；(2) 逐位验证12个阶段 < 10⁻¹⁴；(3) ERA5驱动下物理结果合理。
+</div>
+
+<div class="phys">
+<strong>关键术语：</strong>
+<ul>
+<li><strong>宽带（Broadband）</strong>：覆盖太阳和热红外全光谱的辐射方案，而非单波段简化模型</li>
+<li><strong>逐位精确（Bit-exact）</strong>：不仅数值一致（< 10⁻¹⁴），而且每个浮点数的IEEE 754二进制位模式完全相同——要求运算顺序与Fortran完全一致</li>
+<li><strong>137层（L137）</strong>：ECMWF业务预报使用的垂直网格分辨率</li>
+</ul>
+</div>
+
+<h2>第二段：应用与性能</h2>
+
+<div class="original">
+Automatic differentiation yields the per-column radiative sensitivities ($\partial F / \partial x$) for both shortwave and longwave in a single backward pass, at a cost comparable to one forward evaluation. We apply these gradients to compute global SW+LW feedback kernels on the ERA5 grid, revealing the water-vapor masking of the surface Planck signal and the state-dependent structure of the clear-sky sensitivity. In controlled-recovery experiments, L-BFGS optimization recovers identifiable parameters—surface albedo and cloud fraction—to machine precision, while a six-dimensional cloud-optics case exposes a physical identifiability limit; a dimension-scaling analysis shows that the gradient method becomes the only tractable option when the number of calibratable parameters exceeds approximately four. On GPU, the full shortwave-plus-longwave calculation for approximately 8,000 atmospheric columns completes in under two seconds.
+</div>
+
+<div class="translation">
+自动微分以单次反向传播给出完整的辐射雅可比矩阵——包括短波和长波——其代价与一次前向评估相当。我们将这些梯度应用于ERA5网格上计算全球SW+LW联合反馈核，揭示了水汽对地表Planck信号的遮蔽效应以及晴空敏感性的状态依赖结构。在受控恢复实验中，L-BFGS优化将可辨识参数——地表反照率和云量——恢复到机器精度，而六维云光学案例则揭示了一个物理可辨识性极限；维度缩放分析表明，当可校准参数的数目超过约四个时，梯度方法成为唯一可行的选择。在GPU上，约8000个大气柱的完整短波加长波计算在两秒内完成。
+</div>
+
+<div class="purpose">
+本段概括论文的三大应用：<strong>(1) SW+LW联合反馈核</strong>——首次同时计算短波和长波的全球敏感性场，揭示"水汽遮蔽"效应；<strong>(2) 参数校准</strong>——恢复反照率和云量到机器精度，定义参数维度~4的实用性边界；<strong>(3) 性能</strong>——用"约8000个大气柱"而非"T42"来表达，避免读者不熟悉谱截断概念。
+</div>
+
+<div class="phys">
+<strong>关键概念解释：</strong>
+<ul>
+<li><strong>雅可比矩阵（Jacobian）</strong>：$\partial \mathbf{F}/\partial \mathbf{x}$，所有输出（通量）对所有输入（温度、湿度等）的偏导数矩阵。SW和LW的雅可比同时获得——这是论文相对于之前工作的一个关键进展</li>
+<li><strong>水汽遮蔽（Water-vapor masking）</strong>：热带大气更湿→红外窗区(8-12μm)不透明度更高→地面温度变化难以逃逸到TOA→$\partial F_{\mathrm{OLR}}/\partial T_{\mathrm{sfc}}$在热带反而比极地低。这与$4\sigma T^3$的经典预期相反，是state-dependent反馈的典型例子</li>
+<li><strong>可辨识性（Identifiability）</strong>：给定观测，能否唯一反推参数。六维案例中六个波段的云光学对宽带通量的贡献近简并——不同参数组合产生几乎相同通量</li>
+<li><strong>"约8000个大气柱"</strong>：对应T42分辨率（64×128 Gaussian grid），但用列数而非谱截断表达，更直观</li>
+</ul>
+</div>
+
+<div class="note">
+<strong>摘要修改要点（相对前一版）：</strong>
+<ul>
+<li>删除了背景段（有限差分太慢、伴随模型太难——留给Introduction）</li>
+<li>明确<strong>"both shortwave and longwave"</strong>（之前只暗示SW可微分）</li>
+<li>新增<strong>"water-vapor masking of the surface Planck signal"</strong>（SW+LW联合核的核心科学发现）</li>
+<li>T42 → "approximately 8,000 atmospheric columns"（避免需要解释谱截断）</li>
+<li>性能从"shortwave ~1s" → "shortwave-plus-longwave under two seconds"（同时给出SW+LW）</li>
+<li>总长度缩短约30%</li>
+</ul>
+</div>
+
+<div class="chapter-nav">
+<a href="ch01_intro.html">下一章：引言 →</a>
+</div>
+</div>
+
+</body></html>

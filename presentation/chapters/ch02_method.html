@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>第二章 辐射传输原理 | 可微分辐射参数化讲义</title>
+<link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]],processEscapes:true},svg:{fontCache:"global"}};</script>
+<script src="../mathjax/tex-svg.js" id="MathJax-script" async></script>
+</head><body>
+
+<div class="slide">
+<h1>第二章 宽带辐射参数化（Broadband Radiation Parameterization）逐段精读</h1>
+
+<h2>2.1 光谱结构与求解策略</h2>
+
+<div class="original">
+The atmosphere is treated as a plane-parallel medium discretized into $K$ vertically homogeneous layers bounded by $K{+}1$ half-levels, with index $k{=}1$ at the top of the atmosphere (TOA) and $k{=}K{+}1$ at the surface. Within each layer the optical properties are assumed uniform, and radiative fluxes are decomposed into a solar (shortwave, SW) component and a thermal infrared (longwave, LW) component, each solved independently and then combined to give the net heating rate.
+</div>
+<div class="translation">
+大气被处理为由$K$个垂直均匀层组成的平行平面介质，由$K{+}1$个半层界定，索引$k{=}1$在大气顶（TOA），$k{=}K{+}1$在地面。每层内光学性质假设均匀，辐射通量分解为太阳（短波，SW）分量和热红外（长波，LW）分量，各自独立求解后合并为净加热率。
+</div>
+
+<div class="purpose">
+本段建立论文的<strong>计算框架</strong>：平行平面假设（忽略水平变化，只关注垂直结构）、分层离散化（$K=137$层）、SW/LW分离计算。这是所有宽带辐射方案的共同基础。
+</div>
+
+<div class="analogy">
+<strong>类比——叠玻璃片：</strong>把大气想象成138张半透明玻璃片叠在一起。每片有自己的温度、水汽、臭氧含量——决定了它吸收多少光、散射多少光。我们的目标是计算：太阳光从顶部射入后，经过138层玻璃的吸收和散射，最终有多少到达地面、多少被反射回太空。
+</div>
+
+<div class="original">
+The SW scheme (Fouquart 1980) uses six bands spanning the solar spectrum: bands 1–3 cover the ultraviolet and visible (0.25–0.69 μm), where ozone absorption and Rayleigh scattering dominate, and bands 4–6 cover the near-infrared (0.69–4.00 μm), where water vapor absorption prevails. The LW scheme employs the Rapid Radiative Transfer Model for GCMs (RRTM-G), which applies the correlated-$k$ method to map the 16 thermal infrared bands onto 140 cumulative $g$-points.
+</div>
+<div class="translation">
+短波方案（Fouquart 1980）使用跨越太阳光谱的六个波段：波段1–3覆盖紫外和可见光（0.25–0.69 μm），臭氧吸收和Rayleigh散射主导；波段4–6覆盖近红外（0.69–4.00 μm），水汽吸收占主导。长波方案采用RRTM-G，利用相关$k$方法将16个热红外波段映射到140个累积$g$点。
+</div>
+
+<div class="purpose">
+本段定义SW和LW的<strong>光谱结构</strong>。为什么分6个波段而不是连续光谱？因为每个波段内可以假设光学性质均匀（一种等效的吸收/散射系数），从而避免逐波长积分。这是"宽带"辐射方案的核心近似——用少数几个波段代替数百万条光谱线。
+</div>
+
+<table>
+<tr><th>波段</th><th>波长(μm)</th><th>名称</th><th>主导物理过程</th></tr>
+<tr><td>1</td><td>0.25–0.34</td><td>紫外</td><td>O₃吸收 + Rayleigh散射</td></tr>
+<tr><td>2</td><td>0.34–0.52</td><td>可见光(蓝绿)</td><td>Rayleigh散射</td></tr>
+<tr><td>3</td><td>0.52–0.69</td><td>可见光(红)</td><td>Rayleigh散射 + 弱O₃</td></tr>
+<tr><td>4</td><td>0.69–1.20</td><td>近红外</td><td>H₂O吸收</td></tr>
+<tr><td>5</td><td>1.20–2.80</td><td>近红外</td><td>H₂O + CO₂吸收</td></tr>
+<tr><td>6</td><td>2.80–4.00</td><td>近红外</td><td>H₂O + CO₂吸收</td></tr>
+</table>
+
+<h2>2.2 辐射传输方程</h2>
+
+<div class="original">
+The starting point is the monochromatic radiative transfer equation (RTE) in a plane-parallel, horizontally homogeneous atmosphere:
+$$\mu \frac{\partial I_\nu(\tau_\nu, \mu, \phi)}{\partial \tau_\nu} = I_\nu(\tau_\nu, \mu, \phi) - J_\nu(\tau_\nu, \mu, \phi)$$
+</div>
+<div class="translation">
+出发点是平行平面、水平均匀大气中的单色辐射传输方程：
+$$\mu \frac{\partial I_\nu}{\partial \tau_\nu} = I_\nu - J_\nu$$
+</div>
+
+<div class="purpose">
+论文从<strong>最一般的辐射传输方程</strong>出发建立理论基础。这个方程描述了辐射在介质中传播时的基本物理——左边是传播项，右边是衰减（$I_\nu$）减去源（$J_\nu$）。所有后续的简化（两流近似、宽带分波段、叠加层方法）都是从这个精确方程出发的。
+</div>
+
+<div class="phys">
+<strong>逐项物理含义：</strong>
+<ul>
+<li>$\mu \frac{\partial I_\nu}{\partial \tau_\nu}$：辐射沿光路传播的变化率。$\mu=\cos\theta$是方向因子——$\mu=1$（正下方）时光路最短，变化最快；$\mu \to 0$（接近水平）时光路最长。</li>
+<li>$I_\nu$（右边第一项）：辐射被衰减——光穿过光学厚度$d\tau$时被吸收和散射消耗的部分。这就是Beer-Lambert定律的微分形式。</li>
+<li>$J_\nu$（右边第二项）：辐射被补充——介质自身发射的热辐射（Planck函数）和从其他方向散射进来的光。</li>
+<li><strong>平衡态</strong>：当$I_\nu = J_\nu$时方程右边为零，辐射不再变化——对应"辐射平衡"状态。</li>
+</ul>
+</div>
+
+<h2>2.3 源函数——热发射与散射</h2>
+
+<div class="original">
+with $\omega_\nu$ the single-scattering albedo, $B_\nu(T)$ the Planck function, and $P_\nu$ the scattering phase function. In the SW ($T_\mathrm{sun} \approx 5778$ K $\gg T_\mathrm{atm}$), thermal emission is negligible ($J_\nu$ is purely scattering), while in the LW, solar scattering is negligible ($J_\nu \approx B_\nu$).
+</div>
+<div class="translation">
+其中$\omega_\nu$为单散射反照率，$B_\nu(T)$为Planck函数，$P_\nu$为散射相函数。短波中（$T_\mathrm{sun} \approx 5778$ K $\gg T_\mathrm{atm}$），热发射可忽略（$J_\nu$纯粹来自散射）；长波中，太阳散射可忽略（$J_\nu \approx B_\nu$）。
+</div>
+
+<div class="purpose">
+本段解释了SW和LW<strong>分开计算</strong>的物理原因。太阳温度（5778 K）远高于大气温度（~250 K），两者的热发射光谱完全不重叠——太阳辐射在0.2-4.0 μm，大气热发射在4-100 μm。因此SW方程中忽略热发射项，LW方程中忽略太阳散射项，各自简化。
+</div>
+
+<h2>2.4 两流近似</h2>
+
+<div class="original">
+Because solving the RTE at every spectral point and angle is computationally infeasible, the reference SW scheme applies the two-stream approximation: integrating over the angular hemispheres yields coupled equations for the upward and downward hemispheric mean fluxes $F^\uparrow$ and $F^\downarrow$.
+</div>
+<div class="translation">
+由于在每个光谱点和角度上求解RTE在计算上不可行，参考短波方案采用两流近似：对角度半球积分，得到向上和向下半球平均通量$F^\uparrow$和$F^\downarrow$的耦合方程。
+</div>
+
+<div class="purpose">
+两流近似是辐射方案<strong>最关键的简化</strong>。完整RTE是关于5个变量$(\tau, \mu, \phi, \nu, t)$的微分-积分方程，计算量极大。两流近似将连续的角度分布$(\mu, \phi)$简化为两个方向的通量（上$F^\uparrow$和下$F^\downarrow$），将5维问题降为1维（只沿高度$\tau$变化）。
+</div>
+
+<div class="analogy">
+<strong>类比——房间的灯：</strong>想象一个房间有很多散射光源（大气分子散射阳光）。你不需要知道每个角度有多少光——只需要知道"天花板上有多少光照下来"（$F^\downarrow$）和"地板上有多少光照上去"（$F^\uparrow$）。两流近似就是把复杂的3D角度分布简化为这两个方向的总量。
+</div>
+
+<h2>2.5 Delta-Eddington云层光学</h2>
+
+<div class="original">
+For a cloudy layer with optical thickness $\tau$, single-scattering albedo $\omega$, and asymmetry factor $g$, the delta-Eddington approximation accounts for the strong forward peak of the Mie phase function by truncating the forward-scattering peak.
+</div>
+<div class="translation">
+对于光学厚度$\tau$、单散射反照率$\omega$和不对称因子$g$的云层，Delta-Eddington近似通过截断前向散射峰来处理Mie相函数的强前向峰。
+</div>
+
+<div class="purpose">
+云滴的尺寸（~10 μm）远大于可见光波长（~0.5 μm），Mie散射理论预测散射光子绝大多数沿原方向（前向）。如果不做修正，两流近似会高估后向散射——因为它"以为"散射是各向同性的。Delta-Eddington修正通过"扣除前向峰"恢复了两流近似的精度。
+</div>
+
+<div class="eq">
+$$f = g^2, \quad \tau^* = (1-\omega f)\tau, \quad \omega^* = \frac{(1-f)\omega}{1-\omega f}, \quad g^* = \frac{g}{1+g}$$
+</div>
+
+<div class="phys">
+<strong>每个修正项的物理含义：</strong>
+<ul>
+<li>$\tau^* < \tau$：前向散射的光子本质"穿透"了——不应被计为消光，所以修正后光学厚度减小</li>
+<li>$\omega^* < \omega$：移除前向散射后，剩余散射中吸收的占比增加</li>
+<li>$g^* < g$：移除前向峰后，散射更接近各向同性（$g=0$）</li>
+</ul>
+</div>
+
+<h2>2.6 叠加层方法</h2>
+
+<div class="original">
+The clear-sky column is then built by combining each layer with the accumulated column reflectivity $P_k$ from layers above... The pseudo-flux matrices PRJ and PRK propagate the direct and diffuse beam contributions through the column via a bottom-up recurrence.
+</div>
+<div class="translation">
+晴空柱通过将每层与上方各层的累积列反射率$P_k$组合来构建……伪通量矩阵PRJ和PRK通过自底向上的递推传播直接光束和漫射光的贡献。
+</div>
+
+<div class="purpose">
+叠加层方法是将<strong>单层的R和T</strong>组合为<strong>整柱通量</strong>的核心算法。它的关键性质是<strong>非线性递推</strong>——每层的累积反射率依赖于下方所有层的累积结果。这个递推结构是论文性能分析的焦点：137层 × 6波段 × 多次递推 ≈ 9300次串行循环迭代。
+</div>
+
+<div class="eq">
+$$\mathcal{Q} = \frac{1}{1 - R_{2,k} \cdot P_{k-1}}, \qquad P_k = R_{1,k} + P_{k-1} \cdot T_{1,k} \cdot T_{2,k} \cdot \mathcal{Q}$$
+</div>
+
+<div class="analogy">
+<strong>类比——叠加反射镜：</strong>想象叠玻璃片。第一片有反射率$R_1$、透射率$T_1$。放第二片时，光在两片之间来回反射无穷次——但无穷级数可以解析求和。每次加一层都用闭合公式计算它与下方所有层叠加后的总反射率。
+</div>
+
+<div class="warn">
+<strong>为什么不能并行化？</strong>$P_k$依赖于$P_{k-1}$，$P_{k-1}$依赖于$P_{k-2}$……必须从地面$P_0 = \alpha_s$逐层向上计算到TOA。这就像复利计算$W_n = W_{n-1}(1+r_n)$——不能跳过第1-9年直接算第10年。这就是GPU固定开销~3.4s的物理根源。
+</div>
+
+<h2>2.7 气体吸收</h2>
+
+<div class="original">
+For a layer $k$ with specific humidity $q_k$, temperature $T_k$, and half-level pressures:
+$$u_{\mathrm{H_2O}}(k) = R_{\mathrm{DH}} \cdot \Delta p_k^{1.9} \cdot q_k \cdot \left(\frac{T_\mathrm{ref}}{T_k}\right)^{0.45}$$
+</div>
+<div class="translation">
+对于比湿$q_k$、温度$T_k$和半层气压的层$k$：
+$$u_{\mathrm{H_2O}}(k) = R_{\mathrm{DH}} \cdot \Delta p_k^{1.9} \cdot q_k \cdot \left(\frac{T_\mathrm{ref}}{T_k}\right)^{0.45}$$
+</div>
+
+<div class="purpose">
+气体吸收的关键输入是<strong>路径积分吸收体量</strong>——辐射沿光路穿过气体时累计的气体总量。公式中每个因子的物理来源：
+<ul>
+<li>$\Delta p_k^{1.9}$：气压越高→分子碰撞越频繁→吸收线越宽→有效吸收增强。1.9次幂从逐线积分拟合</li>
+<li>$q_k$：水汽越多→吸收分子越多→吸收越强</li>
+<li>$(T_\mathrm{ref}/T_k)^{0.45}$：温度影响Doppler展宽和碰撞展宽的相对贡献</li>
+</ul>
+</div>
+
+<h2>2.8 Pade逼近</h2>
+
+<div class="original">
+where $d_\nu$ is the fractional absorption in the band wings, and the 14 coefficients are tabulated from line-by-line integration. The polynomials are evaluated by Horner's scheme for numerical stability and bit-exact reproducibility.
+</div>
+<div class="translation">
+其中$d_\nu$是带翼吸收分数，14个系数从逐线积分表格化。多项式用Horner法求值以保证数值稳定性和逐位精确可重复性。
+</div>
+
+<div class="purpose">
+Pade逼近（两个多项式的比值）是计算气体透过率的高效方法。用Horner法（嵌套乘法）而非直接展开多项式——不仅数值更稳定，而且<strong>保证了与Fortran的运算顺序一致</strong>，这是实现bit-exact的关键。
+</div>
+
+<h2>2.9 加热率</h2>
+
+<div class="original">
+$$\left(\frac{\partial T}{\partial t}\right)_\mathrm{rad} = -\frac{g}{c_p \Delta p_k}\left[F_\mathrm{net}(k{+}\tfrac{1}{2}) - F_\mathrm{net}(k{-}\tfrac{1}{2})\right]$$
+</div>
+<div class="translation">
+$$\left(\frac{\partial T}{\partial t}\right)_\mathrm{rad} = -\frac{g}{c_p \Delta p_k}\left[F_\mathrm{net}(k{+}\tfrac{1}{2}) - F_\mathrm{net}(k{-}\tfrac{1}{2})\right]$$
+</div>
+
+<div class="phys">
+<strong>物理含义：</strong>如果某一层上方进入的辐射<strong>多于</strong>下方出去的→这层"积攒"了辐射能量→温度升高（正加热率）。反之则冷却。典型分布：对流层上层强冷却（温室气体向太空发射红外，-2~-5 K/天），低层弱增温（水汽吸收近红外，+0.5-2 K/天），净效果是对流不稳定性的控制因素。
+</div>
+
+<h2>2.10 可微分重构</h2>
+
+<div class="original">
+The differentiable reformulation re-expresses each of the above computations as a batched tensor operation in double precision... Two principles guide the reformulation. First, the arithmetic of the original scheme is preserved operation-by-operation... Second, the reformulation operates on batches of atmospheric columns simultaneously.
+</div>
+<div class="translation">
+可微分重构将上述每个计算重新表达为双精度批量张量操作……两条原则指导重构。第一，原方案的算术运算被逐运算保留……第二，重构同时对大气列批量操作。
+</div>
+
+<div class="purpose">
+本段是方法论的<strong>核心声明</strong>。"逐运算保真"原则——保持Horner法求值顺序、除法出现在相同位置、中间量截断原样保留——不仅保证数值一致，更重要的是<strong>保证梯度的正确性</strong>。梯度依赖于每一步运算的显式表达：如果某步被简化或近似（如用泰勒展开代替精确除法），梯度就会偏离真实物理敏感度。
+</div>
+
+<div class="warn">
+<strong>为什么运算顺序如此重要？</strong>IEEE 754浮点运算不满足结合律：$(a+b)+c \neq a+(b+c)$。例如$a=1.0, b=10^{16}, c=-10^{16}$：$(a+b)+c = 0$但$a+(b+c) = 1.0$。因此PyTorch的每一步运算顺序必须与Fortran完全一致，才能达到bit-exact。
+</div>
+
+<div class="chapter-nav">
+<a href="ch01_intro.html">← 第一章：引言</a>
+<a href="ch03_verification.html">第三章：数值验证 →</a>
+</div>
+</div>
+
+</body></html>

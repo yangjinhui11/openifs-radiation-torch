@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>第一章 引言 | 可微分辐射参数化讲义</title>
+<link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]],processEscapes:true},svg:{fontCache:"global"}};</script>
+<script src="../mathjax/tex-svg.js" id="MathJax-script" async></script>
+</head><body>
+
+<div class="slide">
+<h1>第一章 引言（Introduction）逐段精读</h1>
+
+<h2>1.1 科学问题：云-辐射反馈</h2>
+
+<div class="original">
+Cloud–radiation feedback is the dominant source of inter-model spread in equilibrium climate sensitivity, contributing ~0.7 K of the ~3 K uncertainty range across CMIP6 models (Zelinka et al. 2020). Quantifying this feedback requires knowledge of how top-of-atmosphere (TOA) and surface radiative fluxes respond to perturbations in temperature, water vapor, cloud properties, and trace gases at every vertical level—the so-called radiative feedback kernels (Soden et al. 2008).
+</div>
+
+<div class="translation">
+云–辐射反馈是平衡气候敏感度跨模型差异的主导来源，贡献了CMIP6模型间约3 K不确定性范围中的约0.7 K。量化这一反馈需要知道大气顶（TOA）和地面辐射通量对每一垂直层次上温度、水汽、云属性和痕量气体扰动的响应——即所谓的辐射反馈核。
+</div>
+
+<div class="purpose">
+本段确立论文的大背景：<strong>为什么要关心辐射梯度？</strong>因为气候敏感度预测的可信度取决于它。0.7 K / 3 K ≈ 23%的不确定性来自云-辐射反馈——如果不知道"升温后云和辐射如何变化"，就无法缩小气候预测的范围。而回答这个问题需要的就是<strong>辐射通量对大气状态的逐层偏导数</strong>。
+</div>
+
+<div class="analogy">
+<strong>类比——银行存款与投资策略：</strong>地球的能量收支就像你的银行账户。收入（太阳短波）和支出（长波辐射）的差额决定余额（温度）。当你升职加薪（全球升温）时，你的消费习惯也会改变（水汽增加、云分布变化），这些改变反过来影响你的实际存款——这就是"反馈"。辐射反馈核就是"每个消费类别对收入的敏感度"。
+</div>
+
+<h2>1.2 现有方法的不足</h2>
+
+<div class="original">
+In operational weather and climate models such as the ECMWF Integrated Forecasting System (IFS), these fluxes are computed by sophisticated broadband radiation parameterizations that solve the radiative transfer equation across solar and thermal infrared spectral bands.
+</div>
+<div class="translation">
+在ECMWF集成预报系统（IFS）等业务化天气和气候模式中，这些通量由复杂的宽带辐射参数化计算，后者求解跨越太阳和热红外光谱波段的辐射传输方程。
+</div>
+
+<div class="purpose">
+本段引出"业务级辐射参数化"的概念——它是世界上最先进的辐射计算代码，但不可微分。论文的目标就是让这种<strong>业务级</strong>（而非简化的、教学用的）参数化具备可微分性。
+</div>
+
+<div class="original">
+Two approaches dominate current efforts to make radiation parameterizations more amenable to machine learning. The first replaces the physical scheme entirely with a neural network emulator trained to replicate its input–output mapping. While fast, emulators sacrifice the physical fidelity and interpretability of the original scheme, and their gradients do not correspond to true physical sensitivities. The second retains the Fortran physics but couples it to PyTorch via interop layers such as FTorch. While physically exact, these bridges cannot propagate gradients backward through the ctypes boundary, precluding end-to-end differentiable training.
+</div>
+<div class="translation">
+目前使辐射参数化更适用于机器学习的努力中有两种方法占主导。第一种用训练来复制其输入–输出映射的神经网络模拟器完全替代物理方案。虽然速度快，模拟器牺牲了原始方案的物理保真度和可解释性，且其梯度不对应真正的物理敏感性。第二种保留Fortran物理但通过FTorch等互操作层将其与PyTorch耦合。虽然物理上精确，但这些桥接无法通过ctypes边界反向传播梯度，排除了端到端可微训练的可能性。
+</div>
+
+<div class="purpose">
+本段通过<strong>排除法</strong>引出本文方法。两种现有方法各有致命缺陷：(1) 模拟器的梯度是"学出来的近似"——在训练数据外可能严重失真，而且无法保证物理一致性；(2) 桥接方案虽然物理精确，但ctypes调用是一个"不可微的黑箱"——梯度到了C接口边界就断了。
+</div>
+
+<table>
+<tr><th>方法</th><th>物理精确？</th><th>可微分？</th><th>GPU加速？</th></tr>
+<tr><td>NN模拟器</td><td>❌ 近似</td><td>✅（但梯度是NN的梯度）</td><td>✅</td></tr>
+<tr><td>FTorch桥接</td><td>✅</td><td>❌（梯度无法过ctypes边界）</td><td>部分</td></tr>
+<tr style="background:#eafaf1;font-weight:bold"><td>本文：原生重写</td><td>✅ 逐位一致</td><td>✅ 原生autograd</td><td>✅</td></tr>
+</table>
+
+<h2>1.3 本文方法</h2>
+
+<div class="original">
+A third route, pursued here, is to rewrite the Fortran radiation physics directly as PyTorch tensor operations, preserving the exact arithmetic of the original while gaining automatic differentiation (autograd) natively. This approach has recently been applied to intermediate-complexity atmospheric models reformulated in JAX (Davenport et al. 2026), but has not been applied to a production-grade broadband radiation parameterization—the most computationally expensive single component of any weather or climate model's physics.
+</div>
+<div class="translation">
+本文追求的第三条路线是将Fortran辐射物理直接重写为PyTorch张量操作，在保持原始精确算术的同时原生获得自动微分（autograd）能力。该方法最近被应用于以JAX重构的中等复杂度大气模型（Davenport et al. 2026），但尚未被应用于业务级宽带辐射参数化——任何天气或气候模式物理过程中计算量最大的单一组件。
+</div>
+
+<div class="purpose">
+本段明确论文的<strong>创新点定位</strong>：不是首次做"可微分物理模型"（Davenport等人已做过陆面/中等复杂度模型），而是首次将<strong>业务级宽带辐射参数化</strong>（ECMWF IFS的6波段SW + RRTM-G LW）实现为可微分——这个"首次"的范围限定很重要，因为它界定了技术难度（业务级代码~24000行，远比陆面模式复杂）。
+</div>
+
+<div class="note">
+<strong>关键区分——"业务级"（production-grade）的含义：</strong>不是教学用的简化辐射模型（如只有2-3个波段、10层大气），而是ECMWF业务预报中实际使用的完整方案（6波段SW + 16波段140-g点LW，137层，包含云光学、气溶胶、气体吸收的全部子模块）。"业务级"意味着代码量大、物理过程复杂、且必须与Fortran原始输出逐位一致。
+</div>
+
+<h2>1.4 贡献总结与章节导航</h2>
+
+<div class="original">
+We present the complete reformulation of the OpenIFS 48r1 radiation parameterization—both the six-band shortwave scheme and the RRTM-G longwave scheme—as a differentiable module. Every stage of the radiative transfer calculation, from the path-integrated absorber amounts through the adding-layer column solver to the final heating-rate computation, is rewritten as a sequence of tensor operations that admit automatic differentiation while preserving the exact physics and arithmetic of the Fortran original. The result is a radiation parameterization that is simultaneously physically faithful (bit-exact with its source), differentiable (yielding true physical gradients), and portable across CPU and GPU architectures.
+</div>
+<div class="translation">
+我们呈现OpenIFS 48r1辐射参数化的完整重构——包括六波段短波方案和RRTM-G长波方案——作为一个可微分模块。辐射传输计算的每一阶段，从路径积分吸收体量到叠加层柱求解器再到最终加热率计算，都被重写为一系列允许自动微分的张量操作，同时保留Fortran原始版本的精确物理和算术。结果是一个同时具备物理保真度（与源代码逐位精确）、可微分性（给出真正的物理梯度）和跨CPU/GPU架构可移植性的辐射参数化。
+</div>
+
+<div class="purpose">
+本段定义论文交付物的<strong>三个核心属性</strong>——"三位一体"：
+<ol>
+<li><strong>Physically faithful</strong>（物理保真）: bit-exact，与Fortran逐位一致</li>
+<li><strong>Differentiable</strong>（可微分）: autograd给出精确物理梯度</li>
+<li><strong>Portable</strong>（可移植）: 同一代码在CPU和GPU上运行</li>
+</ol>
+这三个属性的同时实现是论文的核心技术贡献——此前没有辐射参数化能同时满足这三点。
+</div>
+
+<div class="chapter-nav">
+<a href="ch00_abstract.html" class="disabled">← 摘要</a>
+<a href="ch02_method.html">第二章：辐射传输原理 →</a>
+</div>
+</div>
+
+</body></html>

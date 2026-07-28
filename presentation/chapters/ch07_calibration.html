@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>第七章 校准 | 可微分辐射参数化讲义</title>
+<link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]],processEscapes:true},svg:{fontCache:"global"}};</script>
+<script src="../mathjax/tex-svg.js" id="MathJax-script" async></script>
+</head><body>
+<div class="slide">
+<h1>第七章 梯度参数校准（Parameter Calibration）逐段精读</h1>
+
+<h2>7.1 逆问题设定</h2>
+<div class="original">
+The sensitivity kernels establish that the differentiable scheme produces correct gradients. This section applies those gradients to an inverse problem that the Fortran reference cannot solve without a hand-coded adjoint: the calibration of physical parameters by optimization against an observed flux.
+</div>
+<div class="translation">
+敏感性核确立了可微分方案产生正确的梯度。本节将这些梯度应用于一个Fortran参考在手写伴随缺失时无法解决的逆问题：通过优化使模拟通量与观测通量匹配来校准物理参数。
+</div>
+<div class="purpose">
+从<strong>诊断</strong>（敏感性分析=知道参数如何影响通量）转向<strong>推断</strong>（参数校准=知道通量反推参数）。这是梯度方法的核心实用价值——Fortran代码因为不可微分而完全无法做到。</div>
+
+<div class="analogy">
+<strong>类比：</strong>正向问题="我知道配方，预测蛋糕味道"。逆向问题="我尝了蛋糕，反推用了什么配方"。梯度告诉我们"如果多加一点糖，味道变化多少"——从而指导搜索方向。</div>
+
+<h2>7.2 实验1：一维反照率恢复</h2>
+<img src="../images/fig5_calibration.png" alt="Calibration">
+<p class="img-cap">图7(a)：L-BFGS恢复地表反照率。损失函数下降~10个数量级。</p>
+
+<div class="result">
+<ul>
+<li>真实值α=0.30，初始猜测α₀=0.10（差3倍）</li>
+<li>恢复值α=0.299999（118次评估，625 s）</li>
+<li>损失从242降到3.6×10⁻⁹ W²/m⁴（~10个数量级）</li>
+</ul>
+</div>
+
+<h2>7.3 实验2：二维（反照率+云量）恢复</h2>
+<img src="../images/fig6b_flux_fit.png" alt="Flux fit">
+<p class="img-cap">图8：校准前后各列通量残差。红色→蓝色降低7个数量级。</p>
+
+<div class="result">
+<ul>
+<li>真实值(α, cf)=(0.25, 0.60)，恢复到相对误差2.5×10⁻⁷（86次评估）</li>
+<li>16列通量残差：从198.9 W/m²降到1.8×10⁻⁵ W/m²</li>
+<li>L-BFGS轨迹呈"L形"：先沿cf方向移动（敏感度大8倍），再沿α微调</li>
+</ul>
+</div>
+
+<div class="phys">
+<strong>为什么云量敏感度比反照率大8倍？</strong>因为∂F/∂cf≈-405 W/m²而∂F/∂α≈+51 W/m²。云量控制晴空/云天的分区比例——云天通量比晴空少~500 W/m²，所以cf变化0.1就影响50 W/m²。反照率每0.1只影响~15-30 W/m²。
+</div>
+
+<h2>7.4 实验3：六维可辨识性极限</h2>
+<div class="original">
+A six-dimensional cloud-optics case exposes a physical identifiability limit. The loss converges to ~10⁻⁸ W² m⁻⁴, yet the recovered scaling vector remains at a relative parameter error of 0.161—with three of the six factors pinned at their initial value of unity.
+</div>
+<div class="translation">
+六维云光学案例揭示了一个物理可辨识性极限。损失收敛到~10⁻⁸ W²/m⁴，但恢复的缩放向量仍保持0.161的相对参数误差——六个因子中有三个固定在初始值1。
+</div>
+
+<div class="warn">
+<strong>为什么6个参数恢复不了？</strong>不是优化器失败，而是<strong>物理可辨识性极限</strong>：6个短波波段对地面宽带通量的贡献是近简并的——不同参数组合产生几乎相同的通量。雅可比矩阵∂F/∂s是秩亏的。需要分波段通量观测或正则化来打破简并。
+</div>
+
+<h2>7.5 维度缩放分析</h2>
+<table>
+<tr><th>参数维度p</th><th>网格搜索</th><th>梯度方法</th><th>胜者</th></tr>
+<tr><td>1</td><td>19次</td><td>118次</td><td>网格搜索</td></tr>
+<tr><td>2</td><td>225次</td><td>86次</td><td>相当</td></tr>
+<tr><td>≥4</td><td>≥5⁴</td><td>~100（与p无关）</td><td><strong>梯度方法唯一可行</strong></td></tr>
+</table>
+
+<div class="note">
+实际辐射方案的云光学参数（Slingo液滴、Fu冰晶、Martin有效半径）涉及10-100个参数——梯度方法是唯一可行选项（除了手写伴随）。
+</div>
+
+<div class="chapter-nav">
+<a href="ch06_gradient.html">← 第六章：梯度</a>
+<a href="ch08_discussion.html">第八章：讨论 →</a>
+</div>
+</div>
+</body></html>

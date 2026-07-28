@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>第五章 性能 | 可微分辐射参数化讲义</title>
+<link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]],processEscapes:true},svg:{fontCache:"global"}};</script>
+<script src="../mathjax/tex-svg.js" id="MathJax-script" async></script>
+</head><body>
+<div class="slide">
+<h1>第五章 计算性能（Computational Performance）逐段精读</h1>
+
+<h2>5.1 性能对比设计</h2>
+<div class="original">
+Figure 4 reports the runtime scaling of the six-band shortwave calculation (137 levels, clear sky) on an NVIDIA A100 80GB GPU against the compiled Fortran reference on a single CPU thread, measured from 1 to 65,536 columns. All configurations produce bit-exact identical output.
+</div>
+<div class="translation">
+图4报告了六波段短波计算（137层，晴空）在NVIDIA A100 80GB GPU上与编译的Fortran参考（CPU单线程）的运行时间缩放，列数从1到65,536。所有配置产生逐位精确相同的输出。
+</div>
+
+<img src="../images/perf_scaling.png" alt="Performance scaling">
+<p class="img-cap">图4：运行时间随列数的缩放。（a）总运行时间（b）每列时间。蓝实心方=Fortran CPU（实测）；红实心三角虚线=GPU eager（实测）；红<strong>空心</strong>三角<strong>点线</strong>=GPU编译后（<strong>估算</strong>，由实测eager曲线除以4.4×因子导出，仅在N=256验证）。空心标记+点线明确区分估算与实测。</p>
+
+<h2>5.2 Fortran CPU基准</h2>
+<div class="original">
+The Fortran reference scales approximately linearly with column count: at 256 columns it requires 145 ms (0.57 ms/column), increasing to 10.5 s at T42 (N_col = 8,192, 1.28 ms/column) and 61 s at 65,536 columns.
+</div>
+<div class="translation">
+Fortran参考随列数近似线性缩放：256列时145 ms（0.57 ms/列），T42（8192列）时10.5 s（1.28 ms/列），65,536列时61 s。
+</div>
+<div class="purpose">
+Fortran是性能基准——它的内循环是连续编译机器码，零Python开销。中间列数的轻微超线性来自CPU缓存效应。这个线性基准为GPU加速比提供了分母。</div>
+
+<h2>5.3 GPU固定开销</h2>
+<div class="original">
+On GPU without compiler optimization, a fixed overhead of approximately 3.4 s—arising from the approximately 1.8×10⁴ sequential tensor operations that constitute the adding-layer recurrences across 137 levels and six spectral bands—limits performance at small N_col.
+</div>
+<div class="translation">
+在GPU上不使用编译器优化时，约3.4 s的固定开销——来自构成137层六波段叠加层递推的约1.8×10⁴个串行张量操作——限制了小N_col时的性能。
+</div>
+
+<div class="analogy">
+<strong>食堂打饭类比：</strong>"排队+拿盘子+结账"=固定开销（~3.4s），"打主菜"=实际数值计算（与列数成正比但GPU并行很快）。当份数少时固定开销主导；当份数多时实际计算主导。
+</div>
+
+<div class="warn">
+<strong>为什么1列也要3.4秒？</strong>因为循环是沿<strong>垂直方向</strong>的（137层×6波段=9300次串行迭代），与列数无关。叠加层递推是非线性递推——P_k依赖于P_{k-1}，必须逐层串行计算。这就像复利计算：不能跳过第1-9年直接算第10年。
+</div>
+
+<h2>5.4 编译优化</h2>
+<div class="original">
+Compiler optimization reduces this overhead by a factor of 4.4 (verified bit-exact at N_col = 256), lowering the floor to approximately 0.8 s. The compiled-GPU curve is estimated from the measured eager-mode times divided by this empirically verified 4.4× speedup factor.
+</div>
+<div class="translation">
+编译器优化将该开销减少4.4倍（在N_col=256时验证逐位精确），将固定开销降至约0.8 s。编译后GPU曲线是根据实测的eager模式时间除以经验验证的4.4倍加速因子估算的。
+</div>
+
+<h2>5.5 关键数字</h2>
+<table>
+<tr><th>列数</th><th>Fortran CPU（实测）</th><th>GPU eager（实测）</th><th>GPU编译后（估算）</th><th>加速比</th></tr>
+<tr><td>256</td><td>145 ms</td><td>3,421 ms</td><td>~777 ms</td><td>GPU慢5×</td></tr>
+<tr><td><strong>8192 (T42)</strong></td><td><strong>10,531 ms</strong></td><td><strong>3,442 ms</strong></td><td><strong>~800 ms</strong></td><td><strong>快13×</strong></td></tr>
+<tr><td>65,536</td><td>61,376 ms</td><td>3,645 ms</td><td>~828 ms</td><td>快74×</td></tr>
+</table>
+
+<div class="note">
+<strong>交叉点在~1000列：</strong>T42时编译后GPU快13倍。编译开销~21秒（一次性，per-process），对业务数值天气预报或季节-年代际积分可忽略。
+</div>
+
+<div class="chapter-nav">
+<a href="ch04_fluxes.html">← 第四章：通量</a>
+<a href="ch06_gradient.html">第六章：梯度 →</a>
+</div>
+</div>
+</body></html>

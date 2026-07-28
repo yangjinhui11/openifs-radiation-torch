@@ -1,0 +1,11 @@
+# Normalize line endings: text files use LF in the repo (auto-converted on checkout)
+* text=auto eol=lf
+
+# Binary files — never normalize
+*.npy binary
+*.npz binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.json binary

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可微分辐射参数化：从Fortran到PyTorch的精确移植 — 本科生讲义</title>
+<link rel="stylesheet" href="chapters/style.css">
+<script>window.MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]],processEscapes:true},svg:{fontCache:"global"}};</script>
+<script src="mathjax/tex-svg.js" id="MathJax-script" async></script>
+</head>
+<body>
+
+<div class="slide hero" style="text-align:center;padding:60px 0">
+<h1 style="border:none;font-size:2.2em">可微分宽带辐射参数化</h1>
+<p style="font-size:1.15em;color:#7f8c8d;margin-bottom:25px">Bit-Exact Agreement to the Fortran Reference<br>
+Gradient-Based Sensitivity Analysis and Parameter Calibration</p>
+<div style="text-align:left;max-width:650px;margin:30px auto">
+<h3 style="color:var(--primary)">本讲义面向气象入门本科生，逐段翻译论文原文，解释撰写目的，推导公式，解读图表。</h3>
+<p>论文：Yang Jinhui et al., JAMES (Journal of Advances in Modeling Earth Systems)</p>
+<p>代码：OpenIFS 48r1辐射方案（6波段SW + RRTM-G LW）的PyTorch可微分移植</p>
+</div>
+</div>
+
+<div class="slide">
+<h2>📑 讲解目录（逐段精读，共10个章节文件）</h2>
+<div style="margin:20px 0">
+<p style="font-size:1.1em;margin-bottom:20px">点击章节标题进入逐段翻译与讲解：</p>
+<table style="font-size:1em">
+<tr><th style="width:60px">章节</th><th>标题</th><th style="width:100px">文件</th></tr>
+<tr><td>摘要</td><td style="text-align:left;padding-left:20px"><a href="chapters/ch00_abstract.html">Abstract逐段精读（问题背景、技术方案、应用与性能）</a></td><td>ch00</td></tr>
+<tr><td>§1</td><td style="text-align:left;padding-left:20px"><a href="chapters/ch01_intro.html">引言：辐射-云反馈与梯度困境</a></td><td>ch01</td></tr>
+<tr><td>§2</td><td style="text-align:left;padding-left:20px"><a href="chapters/ch02_method.html">宽带辐射参数化：从RTE方程到叠加层方法</a></td><td>ch02</td></tr>
+<tr><td>§3</td><td style="text-align:left;padding-left:20px"><a href="chapters/ch03_verification.html">数值验证：12阶段逐位精确比对</a> 📝</td><td>ch03</td></tr>
+<tr><td>§4</td><td style="text-align:left;padding-left:20px"><a href="chapters/ch04_fluxes.html">ERA5驱动下的全球物理通量 + 云辐射效应(CRE)</a></td><td>ch04</td></tr>
+<tr><td>§5</td><td style="text-align:left;padding-left:20px"><a href="chapters/ch05_performance.html">计算性能：GPU加速与瓶颈分析</a></td><td>ch05</td></tr>
+<tr><td>§6</td><td style="text-align:left;padding-left:20px"><a href="chapters/ch06_gradient.html">自动微分与全球敏感性场</a></td><td>ch06</td></tr>
+<tr><td>§7</td><td style="text-align:left;padding-left:20px"><a href="chapters/ch07_calibration.html">梯度参数校准：逆问题求解</a></td><td>ch07</td></tr>
+<tr><td>§8</td><td style="text-align:left;padding-left:20px"><a href="chapters/ch08_discussion.html">讨论</a></td><td>ch08</td></tr>
+<tr><td>§9</td><td style="text-align:left;padding-left:20px"><a href="chapters/ch09_conclusions.html">总结与展望</a></td><td>ch09</td></tr>
+</table>
+<p style="margin-top:15px;color:#95a5a6;font-size:0.85em">全部章节已编写完成。最新更新：新增云辐射效应(CRE)验证、修复LW向下通量方向bug、所有图加海岸线美化。</p>
+</div>
+
+<div style="margin-top:30px;padding:20px;background:var(--blue-bg);border-radius:8px">
+<h3 style="margin-top:0">📖 本讲义的使用方式</h3>
+<ul>
+<li><strong>原文段落</strong>（灰底框）：论文英文原文，可直接阅读</li>
+<li><strong>中文翻译</strong>（蓝边框）：逐句中文翻译</li>
+<li><strong>撰写目的</strong>（蓝底框）：解释作者为什么这样写，这段在论文结构中的角色</li>
+<li><strong>物理含义</strong>（绿底框）：公式和变量的物理直觉解释</li>
+<li><strong>直观类比</strong>（浅蓝框）：用日常生活的例子帮助理解抽象概念</li>
+<li><strong>重点提示</strong>（黄底框）：需要特别关注的要点</li>
+<li><strong>实验结果</strong>（橙边框）：数据、图表的详细解读</li>
+</ul>
+</div>
+</div>
+
+<div class="slide" style="text-align:center">
+<h2>开始阅读</h2>
+<p style="font-size:1.2em;margin:30px 0"><a href="chapters/ch00_abstract.html" style="color:var(--accent)">→ 从摘要开始</a></p>
+<p style="color:#95a5a6">或者直接跳转到感兴趣的章节</p>
+</div>
+
+</body>
+</html>

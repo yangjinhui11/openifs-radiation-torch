@@ -1,0 +1,48 @@
+/* Shared stylesheet for all chapter files */
+:root{--primary:#1a5276;--accent:#2980b9;--accent2:#e74c3c;--bg:#f8f9fa;--card:#fff;--border:#dee2e6;--code-bg:#f1f3f5;--highlight:#fef9e7;--warn:#fdedec;--ok:#eafaf1;--blue-bg:#ebf5fb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei","Segoe UI",Roboto,sans-serif;background:var(--bg);color:#2c3e50;line-height:1.9;font-size:16px}
+.slide{max-width:1000px;margin:30px auto;background:var(--card);border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);padding:50px 60px}
+h1{color:var(--primary);font-size:2em;margin-bottom:15px;border-bottom:3px solid var(--accent);padding-bottom:10px}
+h2{color:var(--primary);font-size:1.5em;margin:35px 0 15px;padding-left:12px;border-left:5px solid var(--accent)}
+h3{color:#34495e;font-size:1.2em;margin:25px 0 10px}
+h4{color:var(--accent);font-size:1.05em;margin:20px 0 8px}
+p{margin-bottom:14px;text-align:justify}
+.eq{background:var(--code-bg);border-left:4px solid var(--accent);padding:15px 25px;margin:15px 0;border-radius:5px;font-size:1.05em;overflow-x:auto;text-align:center}
+.note{background:var(--highlight);border-left:4px solid #f1c40f;padding:14px 22px;margin:18px 0;border-radius:5px}
+.note::before{content:"📌 重点提示 ";font-weight:bold;color:#e67e22}
+.phys{background:var(--ok);border-left:4px solid #27ae60;padding:14px 22px;margin:18px 0;border-radius:5px}
+.phys::before{content:"🔬 物理含义 ";font-weight:bold;color:#27ae60}
+.analogy{background:var(--blue-bg);border-left:4px solid var(--accent);padding:14px 22px;margin:18px 0;border-radius:5px}
+.analogy::before{content:"💡 直观类比 ";font-weight:bold;color:var(--accent)}
+.result{background:var(--highlight);border:2px solid #f39c12;padding:15px 22px;margin:18px 0;border-radius:8px}
+.result::before{content:"📊 实验结果 ";font-weight:bold;color:#e67e22}
+.warn{background:var(--warn);border-left:4px solid var(--accent2);padding:14px 22px;margin:18px 0;border-radius:5px}
+.warn::before{content:"⚠️ 注意 ";font-weight:bold;color:var(--accent2)}
+code{background:var(--code-bg);padding:2px 6px;border-radius:3px;font-size:0.88em;color:#c0392b}
+pre{background:#1e2a38;color:#ecf0f1;padding:18px;border-radius:8px;overflow-x:auto;margin:18px 0;font-size:0.82em;line-height:1.5}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:15px 0;font-size:0.9em}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:center}
+th{background:var(--primary);color:#fff}
+tr:nth-child(even){background:#f8f9fa}
+img{max-width:100%;border-radius:8px;margin:15px 0;box-shadow:0 2px 8px rgba(0,0,0,0.12)}
+.img-cap{text-align:center;font-size:0.85em;color:#7f8c8d;margin-top:5px}
+ul,ol{margin-bottom:14px;padding-left:25px}
+li{margin:4px 0}
+.step{counter-reset:step}
+.step-item{position:relative;padding-left:45px;margin:15px 0;min-height:35px}
+.step-item::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;width:32px;height:32px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.85em}
+/* Original English text blocks */
+.original{background:#f0f3f5;border:1px solid #d5dbdb;border-radius:8px;padding:16px 22px;margin:15px 0;font-family:"Georgia","Times New Roman",serif;font-size:0.92em;color:#4a5a6a;line-height:1.7}
+.original::before{content:"📄 原文 ";display:block;font-weight:bold;color:var(--primary);font-size:0.8em;margin-bottom:8px;font-family:"Microsoft YaHei",sans-serif}
+/* Translation blocks */
+.translation{background:#fefefe;border-left:3px solid var(--accent);padding:12px 20px;margin:10px 0;border-radius:0 5px 5px 0}
+.translation::before{content:"🔤 中文翻译 ";display:block;font-weight:bold;color:var(--accent);font-size:0.8em;margin-bottom:6px}
+/* Purpose blocks */
+.purpose{background:var(--blue-bg);border-radius:8px;padding:14px 20px;margin:15px 0}
+.purpose::before{content:"🎯 撰写目的 ";display:block;font-weight:bold;color:var(--accent);font-size:0.85em;margin-bottom:8px}
+.chapter-nav{text-align:center;margin:40px 0;padding:20px;background:var(--card);border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,0.06)}
+.chapter-nav a{display:inline-block;padding:10px 25px;margin:0 8px;background:var(--accent);color:#fff;text-decoration:none;border-radius:6px;font-size:0.9em}
+.chapter-nav a:hover{background:#2471a3}
+.chapter-nav a.disabled{background:#bdc3c7;pointer-events:none}
